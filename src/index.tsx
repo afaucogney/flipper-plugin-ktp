@@ -1,15 +1,19 @@
 import React from 'react';
 import {PluginClient, usePlugin, createState, useValue, Layout} from 'flipper-plugin';
-import { makeStyles } from '@material-ui/core/styles';
-import TreeView from '@material-ui/lab/TreeView';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import TreeItem from '@material-ui/lab/TreeItem';
+import { Tree, Input } from 'antd';
+import {
+  HomeOutlined,
+  AndroidOutlined,
+  WindowsOutlined,
+  PartitionOutlined,
+  MehOutlined,
+} from '@ant-design/icons';
 
 type Data = {
-  id: string;
-  scope: string;
+  key: string;
+  title: string;
   children?: Array<Data>
+  icon: Object
 };
 
 type Events = {
@@ -19,47 +23,48 @@ type Events = {
 // Read more: https://fbflipper.com/docs/tutorial/js-custom#creating-a-first-plugin
 // API: https://fbflipper.com/docs/extending/flipper-plugin#pluginclient
 export function plugin(client: PluginClient<Events, {}>) {
-  const data = createState<Record<string, Data>>({}, {persist: 'data'});
+    const data = createState<Record<string, Data>>({}, {persist: 'data'});
 
-  client.onMessage('newData', (newData) => {
-    data.update((draft) => {
-      draft[newData.id] = newData;
+    client.onMessage('newData', (newData) => {
+        data.update((draft) => {
+            draft[newData.key] = newData;
+        });
     });
-  });
 
-  client.addMenuEntry({
-    action: 'clear',
-    handler: async () => {
-      data.set({});
-    },
-  });
+    client.addMenuEntry({
+        action: 'clear',
+        handler: async () => {
+            data.set({});
+        },
+    });
+    console.log(data);
 
-  console.log(data);
+    const dataList = [];
+    const generateList = data => {
+        for (let i = 0; i < data.length; i++) {
+            const node = data[i];
+            const { key } = node;
+            dataList.push({ key, title: key });
+            if (node.children) {
+                generateList(node.children);
+            }
+        }
+    };
+    generateList(data);
 
-  return {data};
+    console.log(dataList);
+
+    return {data};
 }
-
-const useStyles = makeStyles({
-  root: {
-    height: 240,
-    flexGrow: 1,
-    maxWidth: 400,
-  },
-});
-
-
 
 // Read more: https://fbflipper.com/docs/tutorial/js-custom#building-a-user-interface-for-the-plugin
 // API: https://fbflipper.com/docs/extending/flipper-plugin#react-hooks
 export function Component() {
     const instance = usePlugin(plugin);
     const data = useValue(instance.data);
-    const classes = useStyles();
-    const renderTree = (nodes) => (
-    <TreeItem key={nodes.id} nodeId={nodes.id} label={nodes.scope}>
-        {Array.isArray(nodes.children) ? nodes.children.map((node) => renderTree(node)) : null}
-    </TreeItem>
-    );
+    const { Search } = Input;
+
+    console.log(data[0])
     if (Object.keys(data).length < 1) {
         return (
             <Layout.ScrollContainer>
@@ -68,13 +73,13 @@ export function Component() {
     } else {
          return (
             <Layout.ScrollContainer>
-              <TreeView
-                    className={classes.root}
-                    defaultCollapseIcon={<ExpandMoreIcon />}
-                    defaultExpanded={['root']}
-                    defaultExpandIcon={<ChevronRightIcon />}>
-                        {renderTree(data[0])}
-              </TreeView>
+                <Search style={{ marginBottom: 8 }} placeholder="Search" onChange={this.onChange} />
+                <Tree
+                    showIcon
+                    defaultExpandAll
+                    autoExpandParent
+                    treeData={[data[0]]}
+                />
             </Layout.ScrollContainer>
          );
     }
