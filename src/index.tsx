@@ -50,11 +50,15 @@ export function plugin(client: PluginClient<Events, {}>) {
             }
         }
     };
-    generateList(data);
-
+    if (Object.keys(data).length < 1) {
+        generateList(data[0]);
+    }
     console.log(dataList);
 
-    return {data};
+    return {
+        data,
+        dataList,
+    };
 }
 
 // Read more: https://fbflipper.com/docs/tutorial/js-custom#building-a-user-interface-for-the-plugin
@@ -62,6 +66,7 @@ export function plugin(client: PluginClient<Events, {}>) {
 export function Component() {
     const instance = usePlugin(plugin);
     const data = useValue(instance.data);
+    const dataList = useValue(instance.dataList);
     const { Search } = Input;
 
     console.log(data[0])
