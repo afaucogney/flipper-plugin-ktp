@@ -97,18 +97,20 @@ export function Component() {
       return (
         <Layout.Container gap pad>
           <Typography.Title level={4}>Extras</Typography.Title>
-          <ManagedDataInspector data={row} expandRoot={true} />
+          <ManagedDataInspector data={filter(row,selectedId)} expandRoot={true} />
         </Layout.Container>
       );
       }
 
     function filter(array, text) {
         const getNodes = (result, object) => {
-            if (object.key === text) {
+            if (object.key == text) {
+                console.log("object trouve: ", object.key)
                 result.push(object);
                 return result;
             }
             if (Array.isArray(object.children)) {
+                console.log("recursivite children: ", object.key)
                 const nodes = object.children.reduce(getNodes, []);
                 if (nodes.length) result.push({ ...object, nodes });
             }
